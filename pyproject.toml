@@ -16,9 +16,6 @@ dependencies = [
 ]
 
 [project.scripts]
-kai-docx-generate = "kai_docx_generator.scripts.generate:main"
-kai-docx-fill = "kai_docx_generator.scripts.fill_template:main"
-kai-docx-validate = "kai_docx_generator.scripts.validate:main"
 
 [tool.setuptools.packages.find]
 include = ["kai_docx_generator*"]

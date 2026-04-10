@@ -6,7 +6,7 @@ description: >-
   filling template variables in Word documents, validating .docx structure.
   Triggers: "生成word", "转成docx", "markdown转word", "生成文档", "填充模板",
   "fill template", "generate docx", "convert markdown to word".
-version: 1.0.0
+version: 1.0.2
 metadata:
   openclaw:
     emoji: "📝"
@@ -18,10 +18,26 @@ metadata:
       bins:
         - python3
     install:
-      - id: kai-docx-generator
-        kind: pip
-        package: kai-docx-generator
-        label: "kai-docx-generator (core)"
+      - id: python-docx
+        kind: uv
+        package: python-docx
+        label: "python-docx (core)"
+      - id: markdown-it-py
+        kind: uv
+        package: markdown-it-py
+        label: "markdown-it-py (parser)"
+      - id: lxml
+        kind: uv
+        package: lxml
+        label: "lxml (XML)"
+      - id: Pillow
+        kind: uv
+        package: Pillow
+        label: "Pillow (images)"
+      - id: pyyaml
+        kind: uv
+        package: pyyaml
+        label: "pyyaml (YAML)"
 ---
 
 # kai-docx-generator
@@ -32,16 +48,16 @@ Generate professional .docx documents from Markdown, or fill data into .docx tem
 
 | Command | What it does |
 |---------|-------------|
-| `kai-docx-generate <input.md> <output.docx>` | Convert Markdown to .docx |
-| `kai-docx-generate --style <style> <input.md> <output.docx>` | Convert with a specific style |
-| `kai-docx-fill --data <data.json|frontmatter.md> --output <out.docx> <template.docx>` | Fill template with data |
-| `kai-docx-validate <file.docx>` | Validate .docx file structure |
+| `python3 <skill-path>/scripts/generate.py <input.md> <output.docx>` | Convert Markdown to .docx |
+| `python3 <skill-path>/scripts/generate.py --style <style> <input.md> <output.docx>` | Convert with a specific style |
+| `python3 <skill-path>/scripts/fill_template.py --data <data.json|frontmatter.md> --output <out.docx> <template.docx>` | Fill template with data |
+| `python3 <skill-path>/scripts/validate.py <file.docx>` | Validate .docx file structure |
 
 ## Markdown → .docx
 
 ```bash
-kai-docx-generate input.md output.docx
-kai-docx-generate --style report input.md output.docx
+python3 <skill-path>/scripts/generate.py input.md output.docx
+python3 <skill-path>/scripts/generate.py --style report input.md output.docx
 ```
 
 ### Supported Markdown Features
@@ -94,10 +110,10 @@ toc:
 
 ```bash
 # With JSON data
-kai-docx-fill --data data.json --output output.docx template.docx
+python3 <skill-path>/scripts/fill_template.py --data data.json --output output.docx template.docx
 
 # With Markdown front matter as data
-kai-docx-fill --data frontmatter.md --output output.docx template.docx
+python3 <skill-path>/scripts/fill_template.py --data frontmatter.md --output output.docx template.docx
 ```
 
 Data format (JSON):
