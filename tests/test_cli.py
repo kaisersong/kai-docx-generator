@@ -300,3 +300,57 @@ class TestValidateCLI:
             os.unlink(md_path)
             import shutil
             shutil.rmtree(output_dir)
+
+    def test_generate_validate_flag(self):
+        """--validate 应生成后自动验证"""
+        with tempfile.NamedTemporaryFile(suffix=".md", mode="w", delete=False, encoding="utf-8") as f:
+            f.write("# 测试")
+            md_path = f.name
+
+        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as f:
+            output_path = f.name
+
+        try:
+            result = subprocess.run(
+                [sys.executable, os.path.join(SCRIPTS_DIR, "generate.py"),
+                 "--validate", md_path, output_path],
+                capture_output=True, text=True
+            )
+            assert result.returncode == 0
+            assert "验证" in result.stdout
+        finally:
+            os.unlink(md_path)
+            os.unlink(output_path)
+
+    def test_generate_validate_core_properties(self):
+        """YAML front matter 的 title/author/date 应写入 docx 核心属性"""
+        md = (
+            "---\n"
+            "title: 测试文档\n"
+            "author: 测试作者\n"
+            "date: 2026-01-01\n"
+            "---\n\n"
+            "# 正文\n"
+        )
+        with tempfile.NamedTemporaryFile(suffix=".md", mode="w", delete=False, encoding="utf-8") as f:
+            f.write(md)
+            md_path = f.name
+
+        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as f:
+            output_path = f.name
+
+        try:
+            result = subprocess.run(
+                [sys.executable, os.path.join(SCRIPTS_DIR, "generate.py"), md_path, output_path],
+                capture_output=True, text=True
+            )
+            assert result.returncode == 0
+
+            from docx import Document
+            doc = Document(output_path)
+            assert doc.core_properties.title == "测试文档"
+            assert doc.core_properties.author == "测试作者"
+            assert doc.core_properties.created.year == 2026
+        finally:
+            os.unlink(md_path)
+            os.unlink(output_path)
