@@ -2,6 +2,7 @@
 """CLI: Markdown → .docx 新建模式"""
 
 import argparse
+import importlib
 import sys
 import os
 
@@ -13,7 +14,25 @@ from kai_docx_generator.engine.docx_engine import DocxEngine
 from kai_docx_generator.styles.standard import STANDARD_CONFIG
 from scripts.validate import validate
 
-KNOWN_STYLES = {"standard"}
+# Auto-discover all style presets
+_STYLES_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "kai_docx_generator", "styles"
+)
+KNOWN_STYLES = {}
+for fname in os.listdir(_STYLES_DIR):
+    if fname.endswith(".py") and not fname.startswith("_"):
+        module_name = fname[:-3]
+        try:
+            mod = importlib.import_module(f"kai_docx_generator.styles.{module_name}")
+            # Look for *CONFIG dict
+            for attr in dir(mod):
+                if attr.endswith("_CONFIG"):
+                    style_name = attr.replace("_CONFIG", "").lower()
+                    KNOWN_STYLES[style_name] = getattr(mod, attr)
+                    break
+        except Exception:
+            pass
 
 
 def main():
@@ -50,7 +69,7 @@ def main():
         sys.exit(1)
 
     spec = parse_markdown_to_docspec(markdown)
-    engine = DocxEngine(style_config=STANDARD_CONFIG)
+    engine = DocxEngine(style_config=KNOWN_STYLES[args.style])
     doc = engine.generate_from_spec(spec)
     doc.save(args.output)
 
