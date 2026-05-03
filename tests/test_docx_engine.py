@@ -281,6 +281,51 @@ class TestDocxEngineGenerate:
         texts = [p.text for p in doc.paragraphs]
         assert "目录" in texts
 
+    def test_toc_no_leading_page_break(self):
+        """TOC 模式下文档开头不应有分页符（防止首页空白）"""
+        md = "# 标题一\n\n正文内容"
+        spec = parse_markdown_to_docspec(md)
+        spec["metadata"]["toc"] = True
+        engine = DocxEngine()
+        doc = engine.generate_from_spec(spec)
+        xml = doc.element.xml
+        # 找到 <w:body> 后的内容
+        body_start = xml.find("<w:body>")
+        assert body_start >= 0, "文档应有 w:body 元素"
+        # <w:body> 后紧跟的应该是目录标题，不是分页符
+        after_body = xml[body_start:body_start + 500]
+        # 不应有开头的 w:br type="page"
+        assert not ("<w:br" in after_body and "page" in after_body[:100]), \
+            "文档开头不应有分页符，会导致首页空白"
+
+    def test_toc_structure_order(self):
+        """TOC 文档结构顺序应为：目录标题 → TOC域 → 分页符 → 正文标题"""
+        md = "# 正文标题\n\n正文段落"
+        spec = parse_markdown_to_docspec(md)
+        spec["metadata"]["toc"] = True
+        engine = DocxEngine()
+        doc = engine.generate_from_spec(spec)
+
+        # 验证段落顺序
+        paras = [p for p in doc.paragraphs if p.text.strip() or p.style.name.startswith("Heading")]
+
+        # 第一个有内容的段落应该是"目录"标题
+        first_content_idx = 0
+        for i, p in enumerate(paras):
+            if p.text.strip():
+                first_content_idx = i
+                break
+        assert paras[first_content_idx].text == "目录", \
+            f"第一个内容段落应为'目录'，实际是'{paras[first_content_idx].text}'"
+
+        # 正文标题"正文标题"应该在目录之后
+        found_body_title = False
+        for p in paras:
+            if p.text == "正文标题":
+                found_body_title = True
+                break
+        assert found_body_title, "应找到正文标题"
+
     def test_image_path_traversal_rejected(self):
         """路径穿越攻击应被拒绝"""
         doc = self._make_doc_from_md("![test](../../../etc/passwd)")

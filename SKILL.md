@@ -6,7 +6,7 @@ description: >-
   filling template variables in Word documents, validating .docx structure.
   Triggers: "生成word", "转成docx", "markdown转word", "生成文档", "填充模板",
   "fill template", "generate docx", "convert markdown to word".
-version: 1.1.0
+version: 1.1.1
 metadata:
   openclaw:
     emoji: "📝"

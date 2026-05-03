@@ -2,7 +2,6 @@
 
 import os
 import re
-from datetime import date, datetime
 from lxml import etree
 
 from docx import Document
@@ -40,20 +39,6 @@ class DocxEngine:
         apply_standard_style(doc, self.style_config)
 
         meta = spec.get("metadata", {})
-
-        # 文档核心属性
-        if meta.get("title"):
-            doc.core_properties.title = meta["title"]
-        if meta.get("author"):
-            doc.core_properties.author = meta["author"]
-        if meta.get("date"):
-            date_val = meta["date"]
-            if isinstance(date_val, datetime):
-                doc.core_properties.created = date_val
-            elif isinstance(date_val, date):
-                doc.core_properties.created = datetime(date_val.year, date_val.month, date_val.day)
-            elif isinstance(date_val, str):
-                doc.core_properties.created = datetime.fromisoformat(date_val)
 
         # 页眉
         if meta.get("header"):
@@ -401,9 +386,6 @@ class DocxEngine:
         max_level = 3
         if isinstance(toc_config, dict):
             max_level = toc_config.get("max_level", 3)
-
-        # 分页符
-        doc.add_page_break()
 
         # 目录标题
         p = doc.add_heading("目录", level=1)
